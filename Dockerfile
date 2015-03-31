@@ -8,8 +8,16 @@ RUN groupmod -g 1002 www-data && \
 
 RUN apt-get update && apt-get -y upgrade && \
     apt-get -y install python-software-properties locales git vim-tiny \
-    supervisor sudo ruby1.9.1 \
-    php5-cli && \
+    supervisor sudo ruby1.9.1 mysql-client curl \
+    php5-cli php5-curl php-soap php5-imagick php5-gd php5-mcrypt \
+    php5-xmlrpc php5-xsl php5-xdebug libarc-php \
+    libphp-phpmailer php-auth-sasl php-http php-http-request php-http-upload \
+    php-http-webdav-server php-image-text php-log php-mail \
+    php-mail-mime php-mail-mimedecode php-mime-type php-net-dime php-net-ftp \
+    php-net-smtp php-net-socket php-net-url php-pear php-xml-htmlsax3 \
+    php-xml-parser php5-dev php5-memcache php5-memcached phpsysinfo \
+    php5-fpm
+
     echo "US/Eastern" > /etc/timezone && \
     dpkg-reconfigure -f noninteractive tzdata
 
@@ -28,9 +36,9 @@ RUN add-apt-repository -y ppa:nginx/stable && \
     chown -R www-data:www-data /var/www
 
 RUN gem install biodiversity --version 3.1.5 --no-ri --no-rdoc
-RUN apt-get -y -qq install php5-fpm
-    RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
-    RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
+RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" \
+      /etc/php5/fpm/php-fpm.conf
+RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
 
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx.conf /etc/nginx/nginx.conf
@@ -53,5 +61,9 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
     ln -s eol_php_code/applications/xls2dwca && \
     ln -s eol_php_code/applications/xls2EOL && \
     cd && chown www-data:www-data -R /var/www
+RUN apt-get -y purge git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    apt-get -y autoremove
 
 CMD ["/usr/bin/supervisord"]
