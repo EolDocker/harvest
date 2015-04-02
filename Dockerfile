@@ -8,7 +8,7 @@ RUN groupmod -g 1002 www-data && \
 
 RUN apt-get update && apt-get -y upgrade && \
     apt-get -y install python-software-properties locales git vim-tiny \
-    supervisor sudo ruby1.9.1 mysql-client curl \
+    supervisor sudo ruby1.9.1 mysql-client curl imagemagick \
     php5-cli php5-curl php-soap php5-imagick php5-gd php5-mcrypt \
     php5-xmlrpc php5-xsl php5-xdebug libarc-php php5-mysql \
     libphp-phpmailer php-auth-sasl php-http php-http-request php-http-upload \
@@ -62,7 +62,8 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
     ln -s eol_php_code/applications/xls2dwca && \
     ln -s eol_php_code/applications/xls2EOL && \
     cd && chown www-data:www-data -R /var/www && \
-    rm -rf /opt && ln -s /var/www /opt
+    rm -rf /opt && ln -s /var/www /opt && \
+    chmod a+r /etc/resolv.conf
 
 RUN apt-get -y purge git && \
     apt-get clean && \
