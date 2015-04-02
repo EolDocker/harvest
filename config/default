@@ -1,0 +1,38 @@
+server {
+  server_tokens off;
+  listen 80 default_server;
+  # listen [::]:80 default_server;
+
+  root /var/www/;
+
+  index index.html index.htm index.nginx-debian.html index.php;
+
+  # server_name <%= @params["harvest_server_name"] %>;
+  server_name _;
+
+  access_log /var/log/nginx/access.log;
+  error_log /var/log/nginx/error.log;
+  client_max_body_size 20M;
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  location ~ /\.yml {
+    deny  all;
+  }
+
+  location ~ \.php$ {
+    fastcgi_pass   127.0.0.1:9000;
+    proxy_read_timeout 300;
+    proxy_connect_timeout 300;
+    fastcgi_read_timeout 300s;
+    fastcgi_index  index.php;
+    fastcgi_param  SCRIPT_FILENAME  /var/www$fastcgi_script_name;
+    include fastcgi_params;
+  }
+
+  location /eol_php_code {
+    deny all;
+  }
+}
