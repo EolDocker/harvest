@@ -10,7 +10,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get -y install python-software-properties locales git vim-tiny \
     supervisor sudo ruby1.9.1 mysql-client curl \
     php5-cli php5-curl php-soap php5-imagick php5-gd php5-mcrypt \
-    php5-xmlrpc php5-xsl php5-xdebug libarc-php \
+    php5-xmlrpc php5-xsl php5-xdebug libarc-php php5-mysql \
     libphp-phpmailer php-auth-sasl php-http php-http-request php-http-upload \
     php-http-webdav-server php-image-text php-log php-mail \
     php-mail-mime php-mail-mimedecode php-mime-type php-net-dime php-net-ftp \
@@ -61,7 +61,9 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
     ln -s eol_php_code/applications/validator && \
     ln -s eol_php_code/applications/xls2dwca && \
     ln -s eol_php_code/applications/xls2EOL && \
-    cd && chown www-data:www-data -R /var/www
+    cd && chown www-data:www-data -R /var/www && \
+    rm -rf /opt && ln -s /var/www /opt
+
 RUN apt-get -y purge git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
