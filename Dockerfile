@@ -63,7 +63,8 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
     ln -s eol_php_code/applications/xls2EOL && \
     cd && chown www-data:www-data -R /var/www && \
     rm -rf /opt && ln -s /var/www /opt && \
-    chmod 644 /etc/resolv.conf
+    chmod 644 /etc/resolv.conf && \
+    echo "\nchmod a+r /etc/resolv.conf" >> /etc/profile
 
 RUN apt-get -y purge git && \
     apt-get clean && \
