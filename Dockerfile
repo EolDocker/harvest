@@ -16,9 +16,7 @@ RUN apt-get update && apt-get -y upgrade && \
     php-mail-mime php-mail-mimedecode php-mime-type php-net-dime php-net-ftp \
     php-net-smtp php-net-socket php-net-url php-pear php-xml-htmlsax3 \
     php-xml-parser php5-dev php5-memcache php5-memcached phpsysinfo \
-    php5-fpm
-
-    echo "US/Eastern" > /etc/timezone && \
+    php5-fpm && echo "US/Eastern" > /etc/timezone && \
     dpkg-reconfigure -f noninteractive tzdata
 
 
@@ -46,6 +44,7 @@ COPY config/default /etc/nginx/sites-available/default
 COPY config/eol_php_code_production.patch \
      /var/www/eol_php_code_production.patch
 COPY files/* /var/www/
+COPY start.sh /
 
 RUN git clone https://github.com/EOL/eol_php_code.git \
       /var/www/eol_php_code && \
@@ -62,11 +61,11 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
     ln -s eol_php_code/applications/xls2dwca && \
     ln -s eol_php_code/applications/xls2EOL && \
     cd && chown www-data:www-data -R /var/www && \
-    rm -rf /opt && ln -s /var/www /opt && \
+    rm -rf /opt && ln -s /var/www /opt
 
 RUN apt-get -y purge git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     apt-get -y autoremove
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/start.sh"]
