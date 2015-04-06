@@ -63,6 +63,11 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
     cd && chown www-data:www-data -R /var/www && \
     rm -rf /opt && ln -s /var/www /opt
 
+COPY config/crontab /etc/cron.d/hello-cron
+
+RUN chmod 0644 /etc/cron.d/hello-cron && \
+    touch /var/log/cron.log
+
 RUN apt-get -y purge git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \

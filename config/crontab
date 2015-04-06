@@ -1,0 +1,187 @@
+# NOTE: I removed the php5 purge task, since that was never running on thebeast.
+#
+# m h  dom mon dow   command
+* * * * * www-data echo "Hello from crontab" >> /var/log/cron.log 2>&1
+* * * * * www-data echo "Another concurrent command" >> /var/log/cron.log 2>&1
+* * * * * www-data whoami >> /var/log/cron.log 2>&1
+
+#========= 10 PM => start harvesting
+# TMP:30 22 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
+# TMP:00 1 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
+# TMP:00 2 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
+# TMP:00 3 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
+# TMP:
+# TMP:#========= 9:00 PM => download resources
+# TMP:00 21 * * * /usr/bin/php /opt/eol_php_code/update_resources/update_downloadable_resources.php > /dev/null
+# TMP:
+# TMP:#========= 6:00 PM => run connectors
+# TMP:# 0 13 * * * /usr/bin/php /opt/eol_php_code/update_resources/update_connector_resources.php > /dev/null
+# TMP:
+# TMP:#========= 6:00 PM => run stats
+# TMP:00 18 * * * /usr/bin/php /opt/eol_php_code/applications/taxon_page_metrics/generate_taxon_page_metrics.php > /dev/null
+# TMP:
+# TMP:#========= 4:00 pm  --  namelink data objects
+# TMP:00 16 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/namelink_data_objects.php > /dev/null
+# TMP:
+# TMP:#========= 9:00 am, every 1st day of the month -- generate MonthlyGoogleAnalytics stats (estimated 1.5-2 hours execution)
+# TMP:00 09 1 * * /usr/bin/php /opt/eol_php_code/applications/google_stats/generate_monthly_stats.php > /dev/null
+# TMP:
+# TMP:#========= 9:40 am -- call Ruby script to send comments and curator actions to Flickr
+# TMP:30 9 * * *  /usr/bin/php /opt/eol_php_code/rake_tasks/send_flickr_comments.php > /dev/null
+# TMP:
+# TMP:#========= 3:20 pm -- call Ruby script to send comments and curator actions to users and partners
+# TMP:# 20 15 * * *  /usr/bin/php /opt/eol_php_code/rake_tasks/partner_reports_emailer.php > /dev/null
+# TMP:
+# TMP:
+# TMP:
+# TMP:#========= Every 5 minutes -- check and rotate production log if its too big
+# TMP:*/5 * * * *  /usr/bin/php /opt/eol_php_code/rake_tasks/rotate_production_log.php > /dev/null
+# TMP:
+# TMP:
+# TMP:
+# TMP:#========= 1:00 am first of every month => Update BHL links
+# TMP:00 1 1 * * /usr/bin/php /opt/eol_php_code/rake_tasks/update_bhl_names.php > /dev/null
+# TMP:
+# TMP:#========= 12:00 pm on the 2nd and 16th of every month - refresh the export archive of all objects
+# TMP:00 12 2,16 * * /usr/bin/php /opt/eol_php_code/rake_tasks/create_eol_archive_objects.php > /dev/null
+# TMP:
+# TMP:#========= 3:00 pm on the 2nd and 16th of every month - refresh the export archive of EOL page names
+# TMP:00 15 2,16 * * /usr/bin/php /opt/eol_php_code/rake_tasks/create_eol_archive_names_only.php > /dev/null
+# TMP:
+# TMP:#==== 8 PM, every 16th day of the month – [EOL Metrics] [AKA EOL Statistics]
+# TMP:0 20 16 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/736.php > /dev/null
+# TMP:
+# TMP:
+# TMP:
+# TMP:#========= Connectors
+# TMP:#==== 8:30 PM => Flickr
+# TMP:30 20 * * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/15.php > /dev/null
+# TMP:
+# TMP:#==== 2 AM on the 3rd and 17th of every month => Wikimedia Commons
+# TMP:0 2 3,17 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/71.php > /dev/null
+# TMP:
+# TMP:#==== 4 AM every Monday => Wikipedia
+# TMP:0 04 * * 1 /usr/bin/php /opt/eol_php_code/update_resources/connectors/80.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 3th day of the month -- run the MorphBank connector (estimated 3-4 hours execution)
+# TMP:0 05 3 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/83.php > /dev/null
+# TMP:
+# TMP:#==== 9 AM, every 21st day of the month -- run the WORMS connector
+# TMP:30 17 21 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/26.php > /dev/null
+# TMP:
+# TMP:#==== 3 PM BioPix - first of the month every other month
+# TMP:00 15 1 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/31.php > /dev/null
+# TMP:
+# TMP:#==== 8:30pm => Youtube
+# TMP:30 21 * * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/323.php > /dev/null
+# TMP:
+# TMP:#==== 8:45pm => Vimeo
+# TMP:45 21 * * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/214.php > /dev/null
+# TMP:
+# TMP:#==== 3 AM second day of the month every other month => FishBase (estimated 26 minutes execution) 
+# TMP:00 03 2 2,4,6,8,10,12 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/42.php > /dev/null 
+# TMP:
+# TMP:#==== 4 AM third day of the month every other month => MarLIN (estimated 81 seconds execution) 
+# TMP:00 04 3 2,4,6,8,10,12 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/195.php > /dev/null 
+# TMP:
+# TMP:#==== 8 PM every Sunday => Amphibiaweb (estimated 2.5 minutes execution) 
+# TMP:00 21 * * 0 /usr/bin/php /opt/eol_php_code/update_resources/connectors/21.php > /dev/null 
+# TMP:
+# TMP:#==== 8 PM, every 4th day of the month -- [Photo ID Guide to Larvae at Hydrothermal Vents] (estimated 15 seconds execution) 
+# TMP:0 21 4 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/121.php > /dev/null 
+# TMP:
+# TMP:#==== 8 PM, 10th of the month every other month => [Insect Visitors of Illinois Wildflowers] (estimated 16 minutes execution) 
+# TMP:00 20 10 1,3,5,7,9,11 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/143.php > /dev/null 
+# TMP:
+# TMP:#==== 6 AM, 6th of the month, quarterly => [BOLD Systems species level taxa] (estimated 8 days execution) 
+# TMP:00 06 6 3,6,9,12 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/212.php > /dev/null 
+# TMP:
+# TMP:#==== 10 AM, 20th of the month, twice a year => [BOLD Systems - prepare higher level taxa list] (estimated 9 days execution) 
+# TMP:00 10 20 2,8 * /usr/bin/php /opt/eol_php_code/rake_tasks/generate_BOLD_higher_level_taxa.php > /dev/null 
+# TMP:
+# TMP:#==== 7 AM, 3rd of the month, quarterly => [BOLD Systems higher level taxa] (estimated 4 days execution) 
+# TMP:00 07 3 2,5,8,11 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/81.php > /dev/null 
+# TMP:
+# TMP:#==== 7 AM, 13th of the month, 3x a year => [BOLD 2nd image resource]
+# TMP:00 07 13 2,6,10 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/546.php > /dev/null
+# TMP:
+# TMP:#==== 7 PM, every Wednesday => L&E Podcasts (estimated 10 seconds execution) 
+# TMP:00 19 * * 3 /usr/bin/php /opt/eol_php_code/update_resources/connectors/257.php > /dev/null 
+# TMP:
+# TMP:#==== 5 PM, every 1st day of the month -- [Flora of Zimbabwe] (estimated 2 minutes execution)
+# TMP:0 17 1 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/327.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 21th day of the month -- run the DiscoverLife connector (estimated 20 minutes execution)
+# TMP:00 05 21 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/223.php > /dev/null
+# TMP:
+# TMP:#==== 4 AM, every 6th day of the month => NMNH Invertebrate Zoology resource
+# TMP:0 4 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/120.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 6th day of the month => NMNH Entomology resource
+# TMP:0 5 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/176.php > /dev/null
+# TMP:
+# TMP:#==== 6 AM every Saturday => NMNH Birds resource
+# TMP:0 6 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/341.php > /dev/null
+# TMP:
+# TMP:#==== 7 AM every Saturday => NMNH Fishes resource
+# TMP:0 7 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/342.php > /dev/null
+# TMP:
+# TMP:#==== 8 AM every Saturday => NMNH Herpetology Resource
+# TMP:0 8 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/343.php > /dev/null
+# TMP:
+# TMP:#==== 9 AM every Saturday => NMNH Mammals Resource
+# TMP:0 9 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/344.php > /dev/null
+# TMP:
+# TMP:#==== 10 AM every Saturday => NMNH Botany resource
+# TMP:0 10 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/346.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 21st day of the month -- run the [Conservation Biology of Freshwater Turtles and Tortoises] connector (estimated 6 mins. execution)
+# TMP:0 05 21 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/90.php > /dev/null
+# TMP:
+# TMP:#==== 6 AM, every 21st day of the month -- run the MCZHarvard connector (estimated 2 mins. execution)
+# TMP:0 06 21 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/201.php > /dev/null
+# TMP:
+# TMP:#==== 1 AM every Saturday => [Ecomare: Dutch Species Catalogue] (estimated 18 minutes execution)
+# TMP:0 1 * * 6 /usr/bin/php /opt/eol_php_code/update_resources/connectors/414.php > /dev/null
+# TMP:
+# TMP:#==== 8 AM, 21st of the month, quarterly => [Clements Birds Checklist] (estimated 5 mins. execution)
+# TMP:00 08 21 3,6,9,12 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/527.php > /dev/null
+# TMP:
+# TMP:#==== 4 AM every Tuesday => BHL images from BioDivLibrary Photostream, execution time 1 hour
+# TMP:0 4 * * 2 /usr/bin/php /opt/eol_php_code/update_resources/connectors/544.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM every Wednesday => SoundCloud, execution time 10 minutes
+# TMP:0 5 * * 3 /usr/bin/php /opt/eol_php_code/update_resources/connectors/511.php > /dev/null
+# TMP:
+# TMP:#==== 4 AM every Saturday => Zookeys, execution time 5 minutes
+# TMP:0 4 * * 6 /usr/bin/php /opt/eol_php_code/update_resources/connectors/20.php > /dev/null
+# TMP:
+# TMP:#==== 8 PM, 23rd of the month, quarterly => ITIS, execution time 15 minutes
+# TMP:00 20 23 1,4,7,10 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/383.php > /dev/null 
+# TMP:
+# TMP:#==== 3 AM, 3rd day of the month, quarterly => [NatureServe] (estimated 3 days execution, faster when already cached)
+# TMP:00 03 3 2,5,8,11 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/263.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 4th day of the month -- [Number of sequences in GenBank (DATA-1369)]
+# TMP:00 05 4 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/723.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 5th day of the month -- [Number of DNA and specimen records in GGBN (DATA-1372)]
+# TMP:00 05 5 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/730.php > /dev/null
+# TMP:
+# TMP:#==== 5 AM, every 6th day of the month -- [Number of records in GBIF (DATA-1370)]
+# TMP:00 05 6 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/731.php > /dev/null
+# TMP:
+# TMP:#==== 3 AM, 3rd day of the month every other month => [chaloklum-diving.com]
+# TMP:00 03 3 2,4,6,8,10,12 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/729.php > /dev/null
+# TMP:
+# TMP:#==== Tuesdays at 8pm - FALO hierarchy
+# TMP:00 20 * * 2 /usr/bin/php /opt/eol_php_code/update_resources/connectors/778.php > /dev/null
+# TMP:
+# TMP:#==== 3pm on the 26th of Jan, Apr, July and Oct - NCBI Taxonomy
+# TMP:00 15 26 1,4,7,10 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/557.php > /dev/null
+# TMP:
+# TMP:#==== 8 PM, 25th of the month, quarterly (Feb, May, Aug, Nov) => IUCN Structured Data 
+# TMP:00 20 25 2,5,8,11 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/737.php > /dev/null
+# TMP:
+# TMP:#==== Monthly, we need to rebuild site search's spelling suggestions.
+# TMP:00 04 28 * * curl -s -f -o /dev/null 'http://eol-search1.rc.fas.harvard.edu:8080/solr/site_search/select/?q=yiger&spellcheck.q=riger&spellcheck=true&spellcheck.build=true'
