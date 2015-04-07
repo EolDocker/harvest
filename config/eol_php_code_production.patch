@@ -47,8 +47,8 @@ index 47cf288..71060e9 100644
 -ini_set('memory_limit', '1024M'); // 1GB maximum memory usage
 -ini_set('max_execution_time', '21600'); // 6 hours
 -ini_set('display_errors', false);
-+ini_set('memory_limit', '15360M'); // 1GB maximum memory usage
-+ini_set('max_execution_time', '604800'); // 6 hours
++ini_set('memory_limit', '15360M'); // 15GB maximum memory usage
++ini_set('max_execution_time', '604800'); // 7 days
 +ini_set('display_errors', true);
 +
  
