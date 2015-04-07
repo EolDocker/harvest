@@ -70,8 +70,7 @@ RUN git clone https://github.com/EOL/eol_php_code.git \
 COPY config/crontab /var/spool/cron/crontabs/www-data
 
 RUN chmod 0600 /var/spool/cron/crontabs/www-data && \
-    chown www-data:crontab /var/spool/cron/crontabs/www-data && \
-    touch /var/www/log/cron.log
+    chown www-data:crontab /var/spool/cron/crontabs/www-data
 
 RUN apt-get -y purge git && \
     apt-get clean && \
