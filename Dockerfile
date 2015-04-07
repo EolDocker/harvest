@@ -27,9 +27,13 @@ ENV LANGUAGE en_US.UTF-8
 RUN locale-gen en_US.UTF-8 && \
     dpkg-reconfigure locales
 
+# Can't run cron without policy:
+RUN echo "#!/bin/sh" > /usr/sbin/policy-rc.d && \
+    echo "exit 0" >> /usr/sbin/policy-rc.d
+
 RUN add-apt-repository -y ppa:nginx/stable && \
     apt-get update && \
-    apt-get install -qq -y nginx && \
+    apt-get install -qq -y nginx cron && \
     echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
     chown -R www-data:www-data /var/www
 
