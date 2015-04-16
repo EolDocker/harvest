@@ -1,12 +1,9 @@
 # NOTE: I removed the php5 purge task, since that was never running on thebeast.
 #
 # m h  dom mon dow   command
-* * * * * echo "Hello from crontab" >> /var/www/eol_php_code/log/cron.log 2>&1
-* * * * * echo "Another concurrent command" >> /var/www/eol_php_code/log/cron.log 2>&1
-* * * * * whoami >> /var/www/eol_php_code/log/cron.log 2>&1
 
 #========= 10 PM => start harvesting
-# TMP:30 22 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
+00 22 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /opt/eol_php_code/log/harvest.log 2>&1
 # TMP:00 1 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
 # TMP:00 2 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
 # TMP:00 3 * * * /usr/bin/php /opt/eol_php_code/rake_tasks/harvest_resources_cron_task.php > /dev/null
