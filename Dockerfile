@@ -33,7 +33,7 @@ RUN echo "#!/bin/sh" > /usr/sbin/policy-rc.d && \
 
 RUN add-apt-repository -y ppa:nginx/stable && \
     apt-get update && \
-    apt-get install -qq -y nginx cron && \
+    apt-get install -qq -y nginx cron unzip && \
     echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
     chown -R www-data:www-data /var/www
 
