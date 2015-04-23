@@ -43,6 +43,7 @@ RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" \
 RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
 
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY config/php.ini /usr/local/lib/php.ini
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/default /etc/nginx/sites-available/default
 COPY config/eol_php_code_production.patch \
