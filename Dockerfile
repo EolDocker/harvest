@@ -37,7 +37,7 @@ RUN add-apt-repository -y ppa:nginx/stable && \
     echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
     chown -R www-data:www-data /var/www
 
-RUN gem install biodiversity --version 3.1.8 --no-ri --no-rdoc
+RUN gem install biodiversity --version 3.1.10 --no-ri --no-rdoc
 RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" \
       /etc/php5/fpm/php-fpm.conf
 RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
