@@ -29,7 +29,7 @@ server {
   }
 
   # Allow a host of ... uhhh... hosted file types:
-  location ~* \.(html|jpg|png|css|json|xsl|vbs|txt|csv|tsv|tab|sql|xslx|xsd|dtd|xml|pdf|doc|gz|zip|)$ { }
+  location ~* \.(html|jpg|png|css|json|xsl|vbs|txt|csv|tsv|tab|sql|xslx|xsd|dtd|xml|pdf|doc|gz|zip)$ { }
 
   # Be strict:
   location ~ /eol_php_code { deny  all; }
