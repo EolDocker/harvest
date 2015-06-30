@@ -22,7 +22,7 @@
 00 09 1 * * /usr/bin/php /opt/eol_php_code/applications/google_stats/generate_monthly_stats.php > /var/www/eol_php_code/log/ga_stats.log
 
 #========= 9:40 am -- call Ruby script to send comments and curator actions to Flickr
-30 9 * * *  /usr/bin/php /opt/eol_php_code/rake_tasks/send_flickr_comments.php > /var/www/eol_php_code/log/flickr.log
+#BROKEN? 30 9 * * *  /usr/bin/php /opt/eol_php_code/rake_tasks/send_flickr_comments.php > /var/www/eol_php_code/log/flickr.log
 
 #========= 3:20 pm -- call Ruby script to send comments and curator actions to users and partners
 # 20 15 * * *  /usr/bin/php /opt/eol_php_code/rake_tasks/partner_reports_emailer.php > /var/www/eol_php_code/log/cron.log
@@ -49,7 +49,7 @@
 0 20 16 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/736.php > /var/www/eol_php_code/log/connectors.log
 
 #==== 8:30 PM => Flickr
-30 20 * * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/15.php > /var/www/eol_php_code/log/connectors.log
+30 20 * * 4 /usr/bin/php /opt/eol_php_code/update_resources/connectors/15.php > /var/www/eol_php_code/log/connectors.log
 
 #==== 2 AM on the 3rd and 17th of every month => Wikimedia Commons
 0 2 3,17 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/71.php > /var/www/eol_php_code/log/connectors.log
@@ -67,10 +67,10 @@
 00 15 1 * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/31.php > /var/www/eol_php_code/log/connectors.log
 
 #==== 8:30pm => Youtube
-30 21 * * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/323.php > /var/www/eol_php_code/log/connectors.log
+30 21 * * 1 /usr/bin/php /opt/eol_php_code/update_resources/connectors/323.php > /var/www/eol_php_code/log/connectors.log
 
 #==== 8:45pm => Vimeo
-45 21 * * * /usr/bin/php /opt/eol_php_code/update_resources/connectors/214.php > /var/www/eol_php_code/log/connectors.log
+45 21 * * 2 /usr/bin/php /opt/eol_php_code/update_resources/connectors/214.php > /var/www/eol_php_code/log/connectors.log
 
 #==== 3 AM second day of the month every other month => FishBase (estimated 26 minutes execution) 
 00 03 2 2,4,6,8,10,12 * /usr/bin/php /opt/eol_php_code/update_resources/connectors/42.php > /var/www/eol_php_code/log/connectors.log 
