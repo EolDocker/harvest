@@ -49,6 +49,7 @@ index 47cf288..71060e9 100644
 -ini_set('display_errors', false);
 +ini_set('memory_limit', '15360M'); // 15GB maximum memory usage
 +ini_set('max_execution_time', '604800'); // 7 days
++ini_set('default_socket_timeout', '150000'); // 2 days (ish)
 +ini_set('display_errors', true);
 +
  
