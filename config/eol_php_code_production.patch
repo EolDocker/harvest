@@ -1,21 +1,21 @@
-diff --git .ruby-gemset .ruby-gemset
+diff --git a/.ruby-gemset b/.ruby-gemset
 deleted file mode 100644
 index 444edc6..0000000
---- .ruby-gemset
+--- a/.ruby-gemset
 +++ /dev/null
 @@ -1 +0,0 @@
 -eol_php_code
-diff --git .ruby-version .ruby-version
+diff --git a/.ruby-version b/.ruby-version
 deleted file mode 100644
 index 2aaf252..0000000
---- .ruby-version
+--- a/.ruby-version
 +++ /dev/null
 @@ -1 +0,0 @@
 -ruby-1.9.3-p392
-diff --git app/models/Resources.php app/models/Resources.php
+diff --git a/app/models/Resources.php b/app/models/Resources.php
 index fbd3ce4..b89a954 100644
---- app/models/Resources.php
-+++ app/models/Resources.php
+--- a/app/models/Resources.php
++++ b/app/models/Resources.php
 @@ -180,7 +180,8 @@ class Resource extends ActiveRecord
          $extra_hours_clause = "";
          if($hours_ahead_of_time) $extra_hours_clause = " - $hours_ahead_of_time";
@@ -26,10 +26,10 @@ index fbd3ce4..b89a954 100644
          while($result && $row=$result->fetch_assoc())
          {
              $resources[] = $resource = Resource::find($row["id"]);
-diff --git applications/xls2dwca/form_result.php applications/xls2dwca/form_result.php
+diff --git a/applications/xls2dwca/form_result.php b/applications/xls2dwca/form_result.php
 index 4daa2c4..ba36708 100644
---- applications/xls2dwca/form_result.php
-+++ applications/xls2dwca/form_result.php
+--- a/applications/xls2dwca/form_result.php
++++ b/applications/xls2dwca/form_result.php
 @@ -5,7 +5,6 @@ include_once(dirname(__FILE__) . "/../../config/environment.php");
  $url = $_REQUEST['url'];
  $upload = $_FILES["file_upload"];
@@ -126,10 +126,10 @@ index 4daa2c4..ba36708 100644
 +ob_flush();
 +exit(0);
 +?>
-diff --git config/boot.php config/boot.php
+diff --git a/config/boot.php b/config/boot.php
 index 67fc207..65ec0c1 100644
---- config/boot.php
-+++ config/boot.php
+--- a/config/boot.php
++++ b/config/boot.php
 @@ -44,7 +44,7 @@ if(!isset($GLOBALS['ENV_USE_MYSQL'])) $GLOBALS['ENV_USE_MYSQL'] = true;
  if(!isset($GLOBALS['ENV_MYSQL_DEBUG']))         $GLOBALS['ENV_MYSQL_DEBUG'] = false;
  if(!isset($GLOBALS['ENV_DEBUG']))               $GLOBALS['ENV_DEBUG'] = false;
@@ -139,10 +139,10 @@ index 67fc207..65ec0c1 100644
  if(!isset($GLOBALS['ENV_DEBUG_FILE_FLUSH']))    $GLOBALS['ENV_DEBUG_FILE_FLUSH'] = true;
  if(!isset($GLOBALS['ENV_MYSQL_READ_ONLY']))     $GLOBALS['ENV_MYSQL_READ_ONLY'] = false;
  if(!isset($GLOBALS['ENV_MYSQL_ONLY_MASTER']))   $GLOBALS['ENV_MYSQL_ONLY_MASTER'] = false;
-diff --git config/environment.php config/environment.php
+diff --git a/config/environment.php b/config/environment.php
 index 804789f..bbdaf6a 100644
---- config/environment.php
-+++ config/environment.php
+--- a/config/environment.php
++++ b/config/environment.php
 @@ -6,14 +6,15 @@ if(!isset($GLOBALS['DEFAULT_TIMEZONE'])) $GLOBALS['DEFAULT_TIMEZONE'] = 'America
  date_default_timezone_set($GLOBALS['DEFAULT_TIMEZONE']);  // Required by resque...
  
@@ -219,10 +219,10 @@ index 804789f..bbdaf6a 100644
  /* table data which will not get cached - there are too many rows */
  $GLOBALS['no_cache']['agents']              = true;
  $GLOBALS['no_cache']['canonical_forms']     = true;
-diff --git lib/ArchiveDataIngester.php lib/ArchiveDataIngester.php
+diff --git a/lib/ArchiveDataIngester.php b/lib/ArchiveDataIngester.php
 index b640f6a..b3b6cc3 100644
---- lib/ArchiveDataIngester.php
-+++ lib/ArchiveDataIngester.php
+--- a/lib/ArchiveDataIngester.php
++++ b/lib/ArchiveDataIngester.php
 @@ -930,7 +930,7 @@ class ArchiveDataIngester
              self::debug_iterations("Inserting $row_type");
              $this->commit_iterations($row_type, 500);
@@ -232,13 +232,13 @@ index b640f6a..b3b6cc3 100644
              {
                  $row['http://eol.org/schema/measurementOfTaxon'] = 'http://eol.org/schema/terms/true';
              }
-diff --git log/.gitignore log/.gitignore
+diff --git a/log/.gitignore b/log/.gitignore
 deleted file mode 100644
 index e69de29..0000000
-diff --git rake_tasks/denormalize_tables.php rake_tasks/denormalize_tables.php
+diff --git a/rake_tasks/denormalize_tables.php b/rake_tasks/denormalize_tables.php
 index 6de8428..258aa5e 100755
---- rake_tasks/denormalize_tables.php
-+++ rake_tasks/denormalize_tables.php
+--- a/rake_tasks/denormalize_tables.php
++++ b/rake_tasks/denormalize_tables.php
 @@ -14,7 +14,7 @@ $sub_log->finished();
  
  shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/flatten_hierarchies.php ENV_NAME=". $GLOBALS['ENV_NAME']);
@@ -248,10 +248,10 @@ index 6de8428..258aa5e 100755
  // shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/random_hierarchy_images.php ENV_NAME=". $GLOBALS['ENV_NAME']);
  shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/create_preferred_entries.php ENV_NAME=". $GLOBALS['ENV_NAME']);
  
-diff --git rake_tasks/harvest_resources_cron_task.php rake_tasks/harvest_resources_cron_task.php
+diff --git a/rake_tasks/harvest_resources_cron_task.php b/rake_tasks/harvest_resources_cron_task.php
 index 751c3e4..160fc8d 100755
---- rake_tasks/harvest_resources_cron_task.php
-+++ rake_tasks/harvest_resources_cron_task.php
+--- a/rake_tasks/harvest_resources_cron_task.php
++++ b/rake_tasks/harvest_resources_cron_task.php
 @@ -26,61 +26,71 @@ $log = HarvestProcessLog::create(array('process_name' => 'Harvesting'));
  $start_time = time();
  $harvested = array();
@@ -378,10 +378,10 @@ index 751c3e4..160fc8d 100755
  }
  
  if($GLOBALS['ENV_DEBUG']) echo "Exiting harvest loop.\n";
-diff --git update_resources/connectors/750.php update_resources/connectors/750.php
+diff --git a/update_resources/connectors/750.php b/update_resources/connectors/750.php
 index 36ebf83..88db964 100755
---- update_resources/connectors/750.php
-+++ update_resources/connectors/750.php
+--- a/update_resources/connectors/750.php
++++ b/update_resources/connectors/750.php
 @@ -1,13 +1,6 @@
  <?php
  namespace php_active_record;
@@ -404,10 +404,10 @@ index 36ebf83..88db964 100755
 -?>
 \ No newline at end of file
 +?>
-diff --git update_resources/connectors/inat.php update_resources/connectors/inat.php
+diff --git a/update_resources/connectors/inat.php b/update_resources/connectors/inat.php
 index 67fdcce..4e7d6c1 100755
---- update_resources/connectors/inat.php
-+++ update_resources/connectors/inat.php
+--- a/update_resources/connectors/inat.php
++++ b/update_resources/connectors/inat.php
 @@ -9,6 +9,28 @@ $timestart = time_elapsed();
  require_library('connectors/INaturalistAPI');
  $func = new INaturalistAPI();
@@ -437,10 +437,10 @@ index 67fdcce..4e7d6c1 100755
  $elapsed_time_sec = time_elapsed() - $timestart;
  echo "\n\nelapsed time = " . $elapsed_time_sec/60 . " minutes \n";
  echo "elapsed time = " . $elapsed_time_sec/60/60 . " hours \n";
-diff --git vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
+diff --git a/vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php b/vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
 index fde329a..cac6459 100644
---- vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
-+++ vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
+--- a/vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
++++ b/vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
 @@ -410,7 +410,6 @@ class PHPExcel_Reader_Excel5 extends PHPExcel_Reader_Abstract implements PHPExce
  			$res = $ole->read($pFilename);
  			return true;
@@ -449,10 +449,10 @@ index fde329a..cac6459 100644
  			return false;
  		}
  	}
-diff --git vendor/namelink/module.php vendor/namelink/module.php
+diff --git a/vendor/namelink/module.php b/vendor/namelink/module.php
 index 01f1b79..1ae8ecd 100644
---- vendor/namelink/module.php
-+++ vendor/namelink/module.php
+--- a/vendor/namelink/module.php
++++ b/vendor/namelink/module.php
 @@ -6,7 +6,7 @@ require_once(dirname(__FILE__) ."/NameTag.php");
  require_once(dirname(__FILE__) ."/NewNamesFinder.php");
  
