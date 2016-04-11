@@ -1,0 +1,262 @@
+diff --git a/.ruby-gemset b/.ruby-gemset
+deleted file mode 100644
+index 444edc6..0000000
+--- a/.ruby-gemset
++++ /dev/null
+@@ -1 +0,0 @@
+-eol_php_code
+diff --git a/.ruby-version b/.ruby-version
+deleted file mode 100644
+index 2aaf252..0000000
+--- a/.ruby-version
++++ /dev/null
+@@ -1 +0,0 @@
+-ruby-1.9.3-p392
+diff --git a/applications/xls2dwca/form_result.php b/applications/xls2dwca/form_result.php
+index 173e398..c173902 100644
+--- a/applications/xls2dwca/form_result.php
++++ b/applications/xls2dwca/form_result.php
+@@ -22,7 +22,7 @@ if($url)
+     {
+         if(is_dir($temp_dir))
+         {
+-            $errors[] = "The file provided is not an Excel file";
++            $errors[] = "The file provided ". $temp_dir ." is not an Excel file";
+             recursive_rmdir($temp_dir);
+         }else
+         {
+@@ -47,7 +47,9 @@ if($url)
+                     {
+                         if(preg_match("/\/(dwca_[0-9]+)$/", $archive_tmp_dir, $arr))
+                         {
+-                            $final_archive_gzip_url = WEB_ROOT . "tmp/" . $arr[1] . ".tar.gz";
++// TODO: Someone should fix this in the repository such that this is configurable.
++                            $final_archive_gzip_url = "http://services.eol.org/conversions/" . $arr[1] . ".tar.gz";
++                            // $final_archive_gzip_url = WEB_ROOT . "tmp/" . $arr[1] . ".tar.gz";
+                         }
+                     }
+                 }else $errors[] = "Unable to determine the template of the provided Excel file. Are you sure this matches the EOL template provided at https://dl.dropboxusercontent.com/u/1355101/schema/eol_import_spreadsheet.xlsx ?";
+diff --git a/config/environment.php b/config/environment.php
+index 47cf288..71060e9 100644
+--- a/config/environment.php
++++ b/config/environment.php
+@@ -6,18 +6,19 @@ if(!isset($GLOBALS['DEFAULT_TIMEZONE'])) $GLOBALS['DEFAULT_TIMEZONE'] = 'America
+ date_default_timezone_set($GLOBALS['DEFAULT_TIMEZONE']);  // Required by resque...
+ 
+ /* best to leave the PHP settings at the top in case they are overridden in another environment */
+-ini_set('memory_limit', '1024M'); // 1GB maximum memory usage
+-ini_set('max_execution_time', '21600'); // 6 hours
+-ini_set('display_errors', false);
++ini_set('memory_limit', '15360M'); // 15GB maximum memory usage
++ini_set('max_execution_time', '604800'); // 7 days
++ini_set('default_socket_timeout', '150000'); // 2 days (ish)
++ini_set('display_errors', true);
++
+ 
+ /* Default Environment */
+-if(!isset($GLOBALS['ENV_NAME'])) $GLOBALS['ENV_NAME'] = 'development';
++if(!isset($GLOBALS['ENV_NAME'])) $GLOBALS['ENV_NAME'] = 'production';
+ // passing in the CLI arguments
+-set_and_load_proper_environment($argv);
++@set_and_load_proper_environment($argv);
+ 
+ 
+ if(!defined('PS_LITE_CMD')) define('PS_LITE_CMD', 'ps -eo uid,pid,ppid,stime,tty,time,command'); // No -f
+-if(!defined('WEB_ROOT')) define('WEB_ROOT', 'http://localhost/eol_php_code/');  // URL prefix of this installation
++if(!defined('WEB_ROOT')) define('WEB_ROOT', 'http://localhost/eol_php_code/');  // URL prefix of this installation
+ if(!defined('MYSQL_BIN_PATH')) define('MYSQL_BIN_PATH', 'mysql ');              // path to mysql binary. THE SPACE AT THE END IS IMPORTANT
+ if(!defined('CONVERT_BIN_PATH')) define('CONVERT_BIN_PATH', 'convert');        // path to imagemagick convert binary
+ if(!defined('GUNZIP_BIN_PATH')) define('GUNZIP_BIN_PATH', 'gunzip');
+@@ -27,7 +28,8 @@ if(!defined('FILE_BIN_PATH')) define('FILE_BIN_PATH', 'file');
+ if(!defined('PARSE_SERVER_BIN_PATH')) define('PARSE_SERVER_BIN_PATH', 'parserver');
+ 
+ if(!isset($GLOBALS['ENV_DEBUG'])) $GLOBALS['ENV_DEBUG'] = true;
+-if(!isset($GLOBALS['ENV_MYSQL_DEBUG'])) $GLOBALS['ENV_MYSQL_DEBUG'] = true;
++// QUIET PLEASE MAKE IT STOP!
++if(!isset($GLOBALS['ENV_MYSQL_DEBUG'])) $GLOBALS['ENV_MYSQL_DEBUG'] = false;
+ if(!isset($GLOBALS['ENV_DEBUG_TO_FILE'])) $GLOBALS['ENV_DEBUG_TO_FILE'] = true;
+ if(!isset($GLOBALS['ENV_DEBUG_FILE_FLUSH'])) $GLOBALS['ENV_DEBUG_FILE_FLUSH'] = false;
+ 
+@@ -38,13 +40,15 @@ if(!defined('SPARQL_UPLOAD_ENDPOINT')) define("SPARQL_UPLOAD_ENDPOINT", "http://
+ if(!defined('SPARQL_USERNAME')) define("SPARQL_USERNAME", "dba");
+ if(!defined('SPARQL_PASSWORD')) define("SPARQL_PASSWORD", "dba");
+ 
++if(!defined('DOWNLOAD_TIMEOUT_SECONDS'))    define('DOWNLOAD_TIMEOUT_SECONDS', '45');
++
+ /* Initialize app - this should be towards the top of environment.php,
+    but declare the WEB_ROOT and caching settings first.
+    This will load values from ./environments/ENV_NAME.php before values below
+ */
+ require_once(dirname(__FILE__) . '/boot.php');
+ 
+-// $GLOBALS['log_file'] = fopen(DOC_ROOT . "temp/processes.log", "a+");
++$GLOBALS['log_file'] = fopen(DOC_ROOT . "temp/processes.log", "a+");
+ 
+ 
+ 
+@@ -84,12 +88,12 @@ php_active_record\require_vendor('eol_content_schema_v2');
+ 
+ 
+ /* For content downloading */
+-# where harvested media will be downloaded to (must be web accessible)
+-if(!defined('CONTENT_LOCAL_PATH'))          define('CONTENT_LOCAL_PATH',            DOC_ROOT . 'applications/content_server/content/');
+-# where harvested media will be temporarily stored before being moved the above directory
++# where harvested media will be downloaded to (mnust be web accessible)
++if(!defined('CONTENT_LOCAL_PATH'))          define('CONTENT_LOCAL_PATH',            '/opt/content/');
++# where harvested media will eb temporarily stored before being moved the above directory
+ if(!defined('CONTENT_TEMP_PREFIX'))         define('CONTENT_TEMP_PREFIX',           DOC_ROOT . 'applications/content_server/tmp/');
+ # where resource XML files will be downloaded to
+-if(!defined('CONTENT_RESOURCE_LOCAL_PATH')) define('CONTENT_RESOURCE_LOCAL_PATH',   DOC_ROOT . 'applications/content_server/resources/');
++if(!defined('CONTENT_RESOURCE_LOCAL_PATH')) define('CONTENT_RESOURCE_LOCAL_PATH',   '/opt/resources/');
+ if(!defined('CONTENT_GNI_RESOURCE_PATH'))   define('CONTENT_GNI_RESOURCE_PATH',     DOC_ROOT . 'applications/content_server/gni_tcs_files/');
+ # where datasets prepared by app servers will reside (must be web accessible)
+ if(!defined('CONTENT_DATASET_PATH'))        define('CONTENT_DATASET_PATH',          DOC_ROOT . 'applications/content_server/datasets/');
+diff --git a/lib/ContentManager.php b/lib/ContentManager.php
+index db7868f..d73463f 100644
+--- a/lib/ContentManager.php
++++ b/lib/ContentManager.php
+@@ -137,26 +137,34 @@ class ContentManager
+ 
+     public static function download_temp_file_and_assign_extension($file_path_or_uri, $type, $options = array())
+     {
++        debug("ContentManager: = download_temp_file_and_assign_extension ==========");
++        debug("ContentManager: aguments:");
++        debug("ContentManager: " . $options);
+         if(@!$options['unique_key']) $options['unique_key'] = Functions::generate_guid();
+         if(@!$options['timeout']) $options['timeout'] = DOWNLOAD_TIMEOUT_SECONDS;
+ 
+         $suffix = null;
+         if(@$options['suffix']) $suffix = $options['suffix'];
+         elseif(preg_match("/\.([^\.]+)$/", $file_path_or_uri, $arr)) $suffix = strtolower(trim($arr[1]));
++        debug("ContentManager: -> $file_path_or_uri was supposed to have a suffix.");
+ 
+         // resources may need a little extra time to establish a connection
+         if(($type === 'resource') && $options['timeout'] < 60) $options['timeout'] = 60;
+ 
+         $temp_file_path = CONTENT_TEMP_PREFIX . $options['unique_key'] . ".file";
++        debug("ContentManager: = $temp_file_path (from $file_path_or_uri )");
+         if(preg_match("/^(http|https|ftp):\/\//", $file_path_or_uri) || self::is_local($file_path_or_uri))
+         {
++            debug("ContentManager: URL or local");
+             if($file_contents = Functions::get_remote_file($file_path_or_uri, array('timeout' => $options['timeout'])))
+             {
++                debug("ContentManager: got remote file");
+                 // if this is a resource then update the old references to the schema
+                 // there were a few temporary locations for the schema which were being used by early providers
+                 // and not all of them have been updated
+                 if($type === 'resource')
+                 {
++                    debug("ContentManager: is resource");
+                     $file_contents = str_replace("http://www.eol.org/transfer/data/0.1",
+                                                  "http://www.eol.org/transfer/content/0.1", $file_contents);
+                     $file_contents = str_replace("http://services.eol.org/development/pleary/xml/content4.xsd",
+@@ -165,12 +173,16 @@ class ContentManager
+ 
+                 $TMP = fopen($temp_file_path,"w+");
+                 fwrite($TMP, $file_contents);
++                debug("ContentManager: wrote file");
+                 fclose($TMP);
+             }
+         }
+         if (is_file($temp_file_path)) {
++            debug("ContentManager: is file (suffix $suffix)");
+             $temp_file_path_with_extension = self::give_temp_file_right_extension($temp_file_path, $suffix, @$options['unique_key']);
++            debug("ContentManager: gave extension: $temp_file_path_with_extension");
+             $temp_file_path_with_extension = self::enforce_extensions_for_type($temp_file_path_with_extension, $type);
++            debug("ContentManager: enforced extension: $temp_file_path_with_extension");
+             return $temp_file_path_with_extension;
+         } else return null;
+     }
+@@ -192,15 +204,19 @@ class ContentManager
+ 
+     public static function give_temp_file_right_extension($temp_file_path, $original_suffix, $unique_key)
+     {
++        debug("ContentManager: give_temp_file_right_extension");
+         // if the download succeeded
+         if(file_exists($temp_file_path))
+         {
++            debug("ContentManager: file exists (original suffix $original_suffix)");
+             if(SYSTEM_OS == "Windows") $new_suffix = self::determine_file_suffix_pc($temp_file_path, $original_suffix);
+             else $new_suffix = self::determine_file_suffix($temp_file_path, $original_suffix);
+ 
+             if($new_suffix)
+             {
++                debug("ContentManager: new_suffix: $new_suffix");
+                 $new_temp_file_path = CONTENT_TEMP_PREFIX . $unique_key . "." . $new_suffix;
++                debug("ContentManager: new_temp_file_path: $new_temp_file_path");
+                 // copy temporary file from $PATH.file to $PATH.tar.gz for example
+                 rename($temp_file_path, $new_temp_file_path);
+ 
+@@ -213,6 +229,7 @@ class ContentManager
+                 }
+                 if(preg_match("/^(.*)\.(gz|gzip)$/", $new_temp_file_path, $arr))
+                 {
++                    debug("ContentManager: ungzipping...");
+                     shell_exec(GUNZIP_BIN_PATH . " -f " . escapeshellarg($new_temp_file_path));
+                     $new_temp_file_path = $arr[1];
+                     return self::give_temp_file_right_extension($new_temp_file_path, $original_suffix, $unique_key);
+@@ -220,6 +237,7 @@ class ContentManager
+                 }
+                 if(preg_match("/^(.*)\.(tar)$/", $new_temp_file_path, $arr))
+                 {
++                    debug("ContentManager: untarring...");
+                     $archive_directory = $arr[1];
+                     @unlink($archive_directory);
+                     @rmdir($archive_directory);
+@@ -232,6 +250,7 @@ class ContentManager
+                 }
+                 if(preg_match("/^(.*)\.(zip)$/", $new_temp_file_path, $arr))
+                 {
++                    debug("ContentManager: unzipping $new_temp_file_path ...");
+                     $archive_directory = $arr[1];
+                     @unlink($archive_directory);
+                     @rmdir($archive_directory);
+@@ -242,6 +261,7 @@ class ContentManager
+                     $new_temp_file_path = $archive_directory;
+                     self::move_up_if_only_directory($new_temp_file_path);
+                 }
++                debug("ContentManager: done with $new_temp_file_path ...");
+                 if(file_exists($new_temp_file_path)) return $new_temp_file_path;
+             }
+         }
+@@ -312,6 +332,7 @@ class ContentManager
+         elseif(preg_match("/^tar archive/i", $file_type))                               $new_suffix = "tar";
+         elseif(preg_match("/^zip archive data/i", $file_type))
+         {
++            debug("ContentManager: It's compressed, it's a zip, and the suffix is $suffix");
+             if($suffix == "xlsx")                                                       $new_suffix = "xlsx";
+             else                                                                        $new_suffix = "zip";
+         }
+diff --git a/rake_tasks/denormalize_tables.php b/rake_tasks/denormalize_tables.php
+index 6de8428..258aa5e 100755
+--- a/rake_tasks/denormalize_tables.php
++++ b/rake_tasks/denormalize_tables.php
+@@ -14,7 +14,7 @@ $sub_log->finished();
+ 
+ shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/flatten_hierarchies.php ENV_NAME=". $GLOBALS['ENV_NAME']);
+ // shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/table_of_contents.php ENV_NAME=". $GLOBALS['ENV_NAME']);
+-shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/top_images.php ENV_NAME=". $GLOBALS['ENV_NAME']);
++// shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/top_images.php ENV_NAME=". $GLOBALS['ENV_NAME']);
+ // shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/random_hierarchy_images.php ENV_NAME=". $GLOBALS['ENV_NAME']);
+ shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/create_preferred_entries.php ENV_NAME=". $GLOBALS['ENV_NAME']);
+ 
+diff --git a/vendor/namelink/module.php b/vendor/namelink/module.php
+index 01f1b79..2def029 100644
+--- a/vendor/namelink/module.php
++++ b/vendor/namelink/module.php
+@@ -6,7 +6,7 @@ require_once(dirname(__FILE__) ."/NameTag.php");
+ require_once(dirname(__FILE__) ."/NewNamesFinder.php");
+ 
+ /* TaxonFinder */
+-define("TAXONFINDER_SOCKET_SERVER", "127.0.0.1");
++define("TAXONFINDER_SOCKET_SERVER", getenv("EOL_HARVEST_HOST"));
+ define("TAXONFINDER_SOCKET_PORT",   "1234");
+ define("TAXONFINDER_STOP_KEYWORD",  "asdfib3r234");
+ 
+@@ -636,4 +636,4 @@ function junk_parts()
+ }
+ 
+ 
+-?>
+\ No newline at end of file
++?>

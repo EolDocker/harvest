@@ -1,46 +1,149 @@
-diff --git a/.ruby-gemset b/.ruby-gemset
+diff --git .ruby-gemset .ruby-gemset
 deleted file mode 100644
 index 444edc6..0000000
---- a/.ruby-gemset
+--- .ruby-gemset
 +++ /dev/null
 @@ -1 +0,0 @@
 -eol_php_code
-diff --git a/.ruby-version b/.ruby-version
+diff --git .ruby-version .ruby-version
 deleted file mode 100644
 index 2aaf252..0000000
---- a/.ruby-version
+--- .ruby-version
 +++ /dev/null
 @@ -1 +0,0 @@
 -ruby-1.9.3-p392
-diff --git a/applications/xls2dwca/form_result.php b/applications/xls2dwca/form_result.php
-index 173e398..c173902 100644
---- a/applications/xls2dwca/form_result.php
-+++ b/applications/xls2dwca/form_result.php
-@@ -22,7 +22,7 @@ if($url)
+diff --git app/models/Resources.php app/models/Resources.php
+index fbd3ce4..b89a954 100644
+--- app/models/Resources.php
++++ app/models/Resources.php
+@@ -180,7 +180,8 @@ class Resource extends ActiveRecord
+         $extra_hours_clause = "";
+         if($hours_ahead_of_time) $extra_hours_clause = " - $hours_ahead_of_time";
+ 
+-        $result = $mysqli->query("SELECT SQL_NO_CACHE id FROM resources WHERE resource_status_id=".ResourceStatus::force_harvest()->id." OR (harvested_at IS NULL AND (resource_status_id=".ResourceStatus::validated()->id." OR resource_status_id=".ResourceStatus::validation_failed()->id." OR resource_status_id=".ResourceStatus::processing_failed()->id.")) OR (refresh_period_hours!=0 AND DATE_ADD(harvested_at, INTERVAL (refresh_period_hours $extra_hours_clause) HOUR)<=NOW() AND resource_status_id IN (".ResourceStatus::upload_failed()->id.", ".ResourceStatus::validated()->id.", ".ResourceStatus::validation_failed()->id.", ". ResourceStatus::processed()->id .", ".ResourceStatus::processing_failed()->id.", ".ResourceStatus::published()->id."))"); // WAIT: ORDER BY position ASC");
++        // $result = $mysqli->query("SELECT SQL_NO_CACHE id FROM resources WHERE resource_status_id=".ResourceStatus::force_harvest()->id." OR (harvested_at IS NULL AND (resource_status_id=".ResourceStatus::validated()->id." OR resource_status_id=".ResourceStatus::validation_failed()->id." OR resource_status_id=".ResourceStatus::processing_failed()->id.")) OR (refresh_period_hours!=0 AND DATE_ADD(harvested_at, INTERVAL (refresh_period_hours $extra_hours_clause) HOUR)<=NOW() AND resource_status_id IN (".ResourceStatus::upload_failed()->id.", ".ResourceStatus::validated()->id.", ".ResourceStatus::validation_failed()->id.", ". ResourceStatus::processed()->id .", ".ResourceStatus::processing_failed()->id.", ".ResourceStatus::published()->id."))"); // WAIT: ORDER BY position ASC");
++        $result = $mysqli->query("SELECT SQL_NO_CACHE id FROM resources WHERE resource_status_id=".ResourceStatus::force_harvest()->id." OR (harvested_at IS NULL AND (resource_status_id=".ResourceStatus::validated()->id." OR resource_status_id=".ResourceStatus::validation_failed()->id." OR resource_status_id=".ResourceStatus::processing_failed()->id."))"); // WAIT: ORDER BY position ASC");
+         while($result && $row=$result->fetch_assoc())
+         {
+             $resources[] = $resource = Resource::find($row["id"]);
+diff --git applications/xls2dwca/form_result.php applications/xls2dwca/form_result.php
+index 4daa2c4..ba36708 100644
+--- applications/xls2dwca/form_result.php
++++ applications/xls2dwca/form_result.php
+@@ -5,7 +5,6 @@ include_once(dirname(__FILE__) . "/../../config/environment.php");
+ $url = $_REQUEST['url'];
+ $upload = $_FILES["file_upload"];
+ 
+-
+ $suffix = null;
+ if(@$upload['tmp_name'])
+ {
+@@ -13,53 +12,73 @@ if(@$upload['tmp_name'])
+     if(preg_match("/\.([^\.]+)$/", $upload['name'], $arr)) $suffix = strtolower(trim($arr[1]));
+ }
+ 
+-
+ $final_archive_gzip_url = null;
+ $errors = array();
+ if($url)
+ {
++    debug("Cmgr: have url");
+     if($temp_dir = ContentManager::download_temp_file_and_assign_extension($url, $suffix, array('suffix' => $suffix, 'timeout' => 900))) //15 minutes timeout (900 seconds)
      {
++        debug("Cmgr: have temp dir");
          if(is_dir($temp_dir))
          {
--            $errors[] = "The file provided is not an Excel file";
-+            $errors[] = "The file provided ". $temp_dir ." is not an Excel file";
++            debug("Cmgr: is a directory (s/b file)");
+             $errors[] = "The file provided is not an Excel file";
              recursive_rmdir($temp_dir);
          }else
          {
-@@ -47,7 +47,9 @@ if($url)
++            debug("Cmgr: is file");
+             $path_parts = pathinfo($temp_dir);
+             $extension = @$path_parts['extension'];
+             $archive_tmp_dir = @$path_parts['dirname'] ."/". @$path_parts['filename'];
+             if($extension == 'xlsx' || $extension == 'xls')
+             {
++                debug("Cmgr: is Excel");
+                 require_library('ExcelToText');
+                 $archive_converter = new ExcelToText($temp_dir);
+                 if($archive_converter->errors())
+                 {
++                    debug("Cmgr: has errors");
+                     $errors = $archive_converter->errors();
+                 }elseif($archive_converter->is_new_schema_spreadsheet())
+                 {
++                    debug("Cmgr: new schema spreadsheet");
+                     $archive_tmp_dir = $archive_converter->convert_to_new_schema_archive();
+                     if($archive_converter->errors())
                      {
++                        debug("Cmgr: has errors");
+                         $errors = $archive_converter->errors();
+                         recursive_rmdir($archive_tmp_dir);
+                     }else
+                     {
++                        debug("Cmgr: no errors");
                          if(preg_match("/\/(dwca_[0-9]+)$/", $archive_tmp_dir, $arr))
                          {
--                            $final_archive_gzip_url = WEB_ROOT . "tmp/" . $arr[1] . ".tar.gz";
-+// TODO: Someone should fix this in the repository such that this is configurable.
-+                            $final_archive_gzip_url = "http://services.eol.org/conversions/" . $arr[1] . ".tar.gz";
-+                            // $final_archive_gzip_url = WEB_ROOT . "tmp/" . $arr[1] . ".tar.gz";
++                            debug("Cmgr: DWCA");
+                             $final_archive_gzip_url = WEB_ROOT . "tmp/" . $arr[1] . ".tar.gz";
                          }
                      }
-                 }else $errors[] = "Unable to determine the template of the provided Excel file. Are you sure this matches the EOL template provided at https://dl.dropboxusercontent.com/u/1355101/schema/eol_import_spreadsheet.xlsx ?";
-diff --git a/config/environment.php b/config/environment.php
-index 47cf288..71060e9 100644
---- a/config/environment.php
-+++ b/config/environment.php
-@@ -6,18 +6,19 @@ if(!isset($GLOBALS['DEFAULT_TIMEZONE'])) $GLOBALS['DEFAULT_TIMEZONE'] = 'America
+-                }else $errors[] = "Unable to determine the template of the provided Excel file. Are you sure this matches the EOL template provided at https://dl.dropboxusercontent.com/u/1355101/schema/eol_import_spreadsheet.xlsx ?";
++                }else {
++                    debug("Cmgr: NOT a schema spreadsheet");
++                    $errors[] = "Unable to determine the template of the provided Excel file. Are you sure this matches the EOL template provided at https://dl.dropboxusercontent.com/u/1355101/schema/eol_import_spreadsheet.xlsx ?";
++                }
+             }else $errors[] = "The file provided is not an Excel file";
+             unlink($temp_dir);
+         }
+     }else
+     {
++        debug("CMgr: No temp dir!");
+         $errors[] = "There was a problem with the uploaded $suffix file.";
+     }
+ }else $errors[] = "No file was provided";
+ 
++debug("Cmgr: done parsing file");
++?>
++<html>
++<body>
++<h1>Conversion Results</h1>
++<p>
++<?php
+ 
+ if($final_archive_gzip_url)
+ {
+@@ -84,3 +103,11 @@ if($final_archive_gzip_url)
+ }
+ 
+ ?>
++</p>
++</body>
++</html>
++<?php
++flush();
++ob_flush();
++exit(0);
++?>
+diff --git config/boot.php config/boot.php
+index 67fc207..65ec0c1 100644
+--- config/boot.php
++++ config/boot.php
+@@ -44,7 +44,7 @@ if(!isset($GLOBALS['ENV_USE_MYSQL'])) $GLOBALS['ENV_USE_MYSQL'] = true;
+ if(!isset($GLOBALS['ENV_MYSQL_DEBUG']))         $GLOBALS['ENV_MYSQL_DEBUG'] = false;
+ if(!isset($GLOBALS['ENV_DEBUG']))               $GLOBALS['ENV_DEBUG'] = false;
+ if(!isset($GLOBALS['ENV_DEBUG_TO_FILE']))       $GLOBALS['ENV_DEBUG_TO_FILE'] = false;
+-if(!isset($GLOBALS['ENV_DEBUG_FILE']))          $GLOBALS['ENV_DEBUG_FILE'] = DOC_ROOT . 'log/' . $GLOBALS['ENV_NAME'] . '.log';
++if(!isset($GLOBALS['ENV_DEBUG_FILE']))          $GLOBALS['ENV_DEBUG_FILE'] = '/eol/log/production.log'; // ARGH
+ if(!isset($GLOBALS['ENV_DEBUG_FILE_FLUSH']))    $GLOBALS['ENV_DEBUG_FILE_FLUSH'] = true;
+ if(!isset($GLOBALS['ENV_MYSQL_READ_ONLY']))     $GLOBALS['ENV_MYSQL_READ_ONLY'] = false;
+ if(!isset($GLOBALS['ENV_MYSQL_ONLY_MASTER']))   $GLOBALS['ENV_MYSQL_ONLY_MASTER'] = false;
+diff --git config/environment.php config/environment.php
+index 804789f..bbdaf6a 100644
+--- config/environment.php
++++ config/environment.php
+@@ -6,14 +6,15 @@ if(!isset($GLOBALS['DEFAULT_TIMEZONE'])) $GLOBALS['DEFAULT_TIMEZONE'] = 'America
  date_default_timezone_set($GLOBALS['DEFAULT_TIMEZONE']);  // Required by resque...
  
  /* best to leave the PHP settings at the top in case they are overridden in another environment */
@@ -49,7 +152,6 @@ index 47cf288..71060e9 100644
 -ini_set('display_errors', false);
 +ini_set('memory_limit', '15360M'); // 15GB maximum memory usage
 +ini_set('max_execution_time', '604800'); // 7 days
-+ini_set('default_socket_timeout', '150000'); // 2 days (ish)
 +ini_set('display_errors', true);
 +
  
@@ -62,22 +164,19 @@ index 47cf288..71060e9 100644
  
  
  if(!defined('PS_LITE_CMD')) define('PS_LITE_CMD', 'ps -eo uid,pid,ppid,stime,tty,time,command'); // No -f
--if(!defined('WEB_ROOT')) define('WEB_ROOT', 'http://localhost/eol_php_code/');  // URL prefix of this installation
-+if(!defined('WEB_ROOT')) define('WEB_ROOT', 'http://localhost/eol_php_code/');  // URL prefix of this installation
- if(!defined('MYSQL_BIN_PATH')) define('MYSQL_BIN_PATH', 'mysql ');              // path to mysql binary. THE SPACE AT THE END IS IMPORTANT
- if(!defined('CONVERT_BIN_PATH')) define('CONVERT_BIN_PATH', 'convert');        // path to imagemagick convert binary
- if(!defined('GUNZIP_BIN_PATH')) define('GUNZIP_BIN_PATH', 'gunzip');
-@@ -27,7 +28,8 @@ if(!defined('FILE_BIN_PATH')) define('FILE_BIN_PATH', 'file');
- if(!defined('PARSE_SERVER_BIN_PATH')) define('PARSE_SERVER_BIN_PATH', 'parserver');
+@@ -26,8 +27,9 @@ if(!defined('TAR_BIN_PATH')) define('TAR_BIN_PATH', 'tar');
+ if(!defined('FILE_BIN_PATH')) define('FILE_BIN_PATH', 'file');
  
  if(!isset($GLOBALS['ENV_DEBUG'])) $GLOBALS['ENV_DEBUG'] = true;
 -if(!isset($GLOBALS['ENV_MYSQL_DEBUG'])) $GLOBALS['ENV_MYSQL_DEBUG'] = true;
+-if(!isset($GLOBALS['ENV_DEBUG_TO_FILE'])) $GLOBALS['ENV_DEBUG_TO_FILE'] = false;
 +// QUIET PLEASE MAKE IT STOP!
 +if(!isset($GLOBALS['ENV_MYSQL_DEBUG'])) $GLOBALS['ENV_MYSQL_DEBUG'] = false;
- if(!isset($GLOBALS['ENV_DEBUG_TO_FILE'])) $GLOBALS['ENV_DEBUG_TO_FILE'] = true;
++if(!isset($GLOBALS['ENV_DEBUG_TO_FILE'])) $GLOBALS['ENV_DEBUG_TO_FILE'] = true;
  if(!isset($GLOBALS['ENV_DEBUG_FILE_FLUSH'])) $GLOBALS['ENV_DEBUG_FILE_FLUSH'] = false;
  
-@@ -38,13 +40,15 @@ if(!defined('SPARQL_UPLOAD_ENDPOINT')) define("SPARQL_UPLOAD_ENDPOINT", "http://
+ if(!isset($GLOBALS['ENV_ENABLE_CACHING'])) $GLOBALS['ENV_ENABLE_CACHING'] = true;
+@@ -37,13 +39,15 @@ if(!defined('SPARQL_UPLOAD_ENDPOINT')) define("SPARQL_UPLOAD_ENDPOINT", "http://
  if(!defined('SPARQL_USERNAME')) define("SPARQL_USERNAME", "dba");
  if(!defined('SPARQL_PASSWORD')) define("SPARQL_PASSWORD", "dba");
  
@@ -94,7 +193,7 @@ index 47cf288..71060e9 100644
  
  
  
-@@ -84,12 +88,12 @@ php_active_record\require_vendor('eol_content_schema_v2');
+@@ -83,12 +87,12 @@ php_active_record\require_vendor('eol_content_schema_v2');
  
  
  /* For content downloading */
@@ -111,126 +210,35 @@ index 47cf288..71060e9 100644
  if(!defined('CONTENT_GNI_RESOURCE_PATH'))   define('CONTENT_GNI_RESOURCE_PATH',     DOC_ROOT . 'applications/content_server/gni_tcs_files/');
  # where datasets prepared by app servers will reside (must be web accessible)
  if(!defined('CONTENT_DATASET_PATH'))        define('CONTENT_DATASET_PATH',          DOC_ROOT . 'applications/content_server/datasets/');
-diff --git a/lib/ContentManager.php b/lib/ContentManager.php
-index db7868f..d73463f 100644
---- a/lib/ContentManager.php
-+++ b/lib/ContentManager.php
-@@ -137,26 +137,34 @@ class ContentManager
+@@ -97,7 +101,7 @@ if(!defined('CONTENT_DATASET_PATH'))        define('CONTENT_DATASET_PATH',
+ if(!defined('WEB_ROOT')) define('MAGICK_HOME', '/usr/local/ImageMagick/');       // path to ImageMagick home directory
  
-     public static function download_temp_file_and_assign_extension($file_path_or_uri, $type, $options = array())
-     {
-+        debug("ContentManager: = download_temp_file_and_assign_extension ==========");
-+        debug("ContentManager: aguments:");
-+        debug("ContentManager: " . $options);
-         if(@!$options['unique_key']) $options['unique_key'] = Functions::generate_guid();
-         if(@!$options['timeout']) $options['timeout'] = DOWNLOAD_TIMEOUT_SECONDS;
- 
-         $suffix = null;
-         if(@$options['suffix']) $suffix = $options['suffix'];
-         elseif(preg_match("/\.([^\.]+)$/", $file_path_or_uri, $arr)) $suffix = strtolower(trim($arr[1]));
-+        debug("ContentManager: -> $file_path_or_uri was supposed to have a suffix.");
- 
-         // resources may need a little extra time to establish a connection
-         if(($type === 'resource') && $options['timeout'] < 60) $options['timeout'] = 60;
- 
-         $temp_file_path = CONTENT_TEMP_PREFIX . $options['unique_key'] . ".file";
-+        debug("ContentManager: = $temp_file_path (from $file_path_or_uri )");
-         if(preg_match("/^(http|https|ftp):\/\//", $file_path_or_uri) || self::is_local($file_path_or_uri))
-         {
-+            debug("ContentManager: URL or local");
-             if($file_contents = Functions::get_remote_file($file_path_or_uri, array('timeout' => $options['timeout'])))
+ // Resque:
+-if(!defined('RESQUE_HOST')) define('RESQUE_HOST', 'localhost:6379');
++if(!defined('RESQUE_HOST')) define('RESQUE_HOST', '10.252.248.35:6379');
+ /* table data which will not get cached - there are too many rows */
+ $GLOBALS['no_cache']['agents']              = true;
+ $GLOBALS['no_cache']['canonical_forms']     = true;
+diff --git lib/ArchiveDataIngester.php lib/ArchiveDataIngester.php
+index b640f6a..b3b6cc3 100644
+--- lib/ArchiveDataIngester.php
++++ lib/ArchiveDataIngester.php
+@@ -930,7 +930,7 @@ class ArchiveDataIngester
+             self::debug_iterations("Inserting $row_type");
+             $this->commit_iterations($row_type, 500);
+             # TODO: fix this with validation
+-            if(in_array(@$row['http://eol.org/schema/measurementOfTaxon'], $valid_measurement_of_taxon))
++            if(in_array(strtolower(@$row['http://eol.org/schema/measurementOfTaxon']), $valid_measurement_of_taxon))
              {
-+                debug("ContentManager: got remote file");
-                 // if this is a resource then update the old references to the schema
-                 // there were a few temporary locations for the schema which were being used by early providers
-                 // and not all of them have been updated
-                 if($type === 'resource')
-                 {
-+                    debug("ContentManager: is resource");
-                     $file_contents = str_replace("http://www.eol.org/transfer/data/0.1",
-                                                  "http://www.eol.org/transfer/content/0.1", $file_contents);
-                     $file_contents = str_replace("http://services.eol.org/development/pleary/xml/content4.xsd",
-@@ -165,12 +173,16 @@ class ContentManager
- 
-                 $TMP = fopen($temp_file_path,"w+");
-                 fwrite($TMP, $file_contents);
-+                debug("ContentManager: wrote file");
-                 fclose($TMP);
+                 $row['http://eol.org/schema/measurementOfTaxon'] = 'http://eol.org/schema/terms/true';
              }
-         }
-         if (is_file($temp_file_path)) {
-+            debug("ContentManager: is file (suffix $suffix)");
-             $temp_file_path_with_extension = self::give_temp_file_right_extension($temp_file_path, $suffix, @$options['unique_key']);
-+            debug("ContentManager: gave extension: $temp_file_path_with_extension");
-             $temp_file_path_with_extension = self::enforce_extensions_for_type($temp_file_path_with_extension, $type);
-+            debug("ContentManager: enforced extension: $temp_file_path_with_extension");
-             return $temp_file_path_with_extension;
-         } else return null;
-     }
-@@ -192,15 +204,19 @@ class ContentManager
- 
-     public static function give_temp_file_right_extension($temp_file_path, $original_suffix, $unique_key)
-     {
-+        debug("ContentManager: give_temp_file_right_extension");
-         // if the download succeeded
-         if(file_exists($temp_file_path))
-         {
-+            debug("ContentManager: file exists (original suffix $original_suffix)");
-             if(SYSTEM_OS == "Windows") $new_suffix = self::determine_file_suffix_pc($temp_file_path, $original_suffix);
-             else $new_suffix = self::determine_file_suffix($temp_file_path, $original_suffix);
- 
-             if($new_suffix)
-             {
-+                debug("ContentManager: new_suffix: $new_suffix");
-                 $new_temp_file_path = CONTENT_TEMP_PREFIX . $unique_key . "." . $new_suffix;
-+                debug("ContentManager: new_temp_file_path: $new_temp_file_path");
-                 // copy temporary file from $PATH.file to $PATH.tar.gz for example
-                 rename($temp_file_path, $new_temp_file_path);
- 
-@@ -213,6 +229,7 @@ class ContentManager
-                 }
-                 if(preg_match("/^(.*)\.(gz|gzip)$/", $new_temp_file_path, $arr))
-                 {
-+                    debug("ContentManager: ungzipping...");
-                     shell_exec(GUNZIP_BIN_PATH . " -f " . escapeshellarg($new_temp_file_path));
-                     $new_temp_file_path = $arr[1];
-                     return self::give_temp_file_right_extension($new_temp_file_path, $original_suffix, $unique_key);
-@@ -220,6 +237,7 @@ class ContentManager
-                 }
-                 if(preg_match("/^(.*)\.(tar)$/", $new_temp_file_path, $arr))
-                 {
-+                    debug("ContentManager: untarring...");
-                     $archive_directory = $arr[1];
-                     @unlink($archive_directory);
-                     @rmdir($archive_directory);
-@@ -232,6 +250,7 @@ class ContentManager
-                 }
-                 if(preg_match("/^(.*)\.(zip)$/", $new_temp_file_path, $arr))
-                 {
-+                    debug("ContentManager: unzipping $new_temp_file_path ...");
-                     $archive_directory = $arr[1];
-                     @unlink($archive_directory);
-                     @rmdir($archive_directory);
-@@ -242,6 +261,7 @@ class ContentManager
-                     $new_temp_file_path = $archive_directory;
-                     self::move_up_if_only_directory($new_temp_file_path);
-                 }
-+                debug("ContentManager: done with $new_temp_file_path ...");
-                 if(file_exists($new_temp_file_path)) return $new_temp_file_path;
-             }
-         }
-@@ -312,6 +332,7 @@ class ContentManager
-         elseif(preg_match("/^tar archive/i", $file_type))                               $new_suffix = "tar";
-         elseif(preg_match("/^zip archive data/i", $file_type))
-         {
-+            debug("ContentManager: It's compressed, it's a zip, and the suffix is $suffix");
-             if($suffix == "xlsx")                                                       $new_suffix = "xlsx";
-             else                                                                        $new_suffix = "zip";
-         }
-diff --git a/rake_tasks/denormalize_tables.php b/rake_tasks/denormalize_tables.php
+diff --git log/.gitignore log/.gitignore
+deleted file mode 100644
+index e69de29..0000000
+diff --git rake_tasks/denormalize_tables.php rake_tasks/denormalize_tables.php
 index 6de8428..258aa5e 100755
---- a/rake_tasks/denormalize_tables.php
-+++ b/rake_tasks/denormalize_tables.php
+--- rake_tasks/denormalize_tables.php
++++ rake_tasks/denormalize_tables.php
 @@ -14,7 +14,7 @@ $sub_log->finished();
  
  shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/flatten_hierarchies.php ENV_NAME=". $GLOBALS['ENV_NAME']);
@@ -240,10 +248,211 @@ index 6de8428..258aa5e 100755
  // shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/random_hierarchy_images.php ENV_NAME=". $GLOBALS['ENV_NAME']);
  shell_exec(PHP_BIN_PATH . dirname(__FILE__)."/create_preferred_entries.php ENV_NAME=". $GLOBALS['ENV_NAME']);
  
-diff --git a/vendor/namelink/module.php b/vendor/namelink/module.php
-index 01f1b79..2def029 100644
---- a/vendor/namelink/module.php
-+++ b/vendor/namelink/module.php
+diff --git rake_tasks/harvest_resources_cron_task.php rake_tasks/harvest_resources_cron_task.php
+index 751c3e4..160fc8d 100755
+--- rake_tasks/harvest_resources_cron_task.php
++++ rake_tasks/harvest_resources_cron_task.php
+@@ -26,61 +26,71 @@ $log = HarvestProcessLog::create(array('process_name' => 'Harvesting'));
+ $start_time = time();
+ $harvested = array();
+ 
+-while((time() - $start_time)/(60*60) < 10)
++while((time() - $start_time)/(60*60) < 8)
+ {
+-	//sleep the php until resuming the harvest from the rails side
+-	while(Resource::is_paused() == 1)
+-		sleep(40);
+-	//get the resource and check with the previous one
+-	$resource = Resource::get_ready_resource();
+-
+-	if (is_null($resource))
+-		break;
+-
+-	if (!isset($previous_resource->id))
+-		$previous_resource->id = -1;
+-
+-	if ($previous_resource->id == $resource->id){
+-		$resource->harvesting_failed();
+-		$previous_resource = $resource;
+-		continue;
+-	}else{
+-		$previous_resource = $resource;
+-	}
+-
+-	$GLOBALS['currently_harvesting_resource_id'] = $resource->id;
+-    // IMPORTANT!
+-    // We skip a few hard-coded resource IDs, here.
+-    // TODO - it would be preferable if this flag were in the DB. ...It looks like using a ResourceStatus could achieve the effect.
+-    // TODO - output a warning if a resource gets skipped.
+-    if(in_array($resource->id, array(77, 710, 752))) {
+-      debug("** SKIPPING hard-coded exception resource " . $resource->id);
+-      debug("   (" . $resource->title . ")");
+-      $resource->harvesting_failed();
+-      continue;
+-    }
+-    // NOTE that a specified id will get SKIPPED if it's not "ready" for harvesting.
+-    if($specified_id && $resource->id != $specified_id) {
+-      debug("** SKIPPING non-specified resource " . $resource->id);
+-      debug("   (" . $resource->title . ")");
+-      $resource->harvesting_failed();
+-      continue;
+-    };
+-    if($GLOBALS['ENV_DEBUG']) echo date("Y-m-d", time()) . "++ START HARVEST " .
+-      $resource->id . " (" . $resource->title . ")\n";
+-
+-    $validate = true;
+-    if($GLOBALS['ENV_NAME'] == 'test') $validate = false;
+-
+-    try {
+-      $resource->harvest($validate, false, $fast_for_testing);
+-      if($resource->resource_status_id != ResourceStatus::harvesting_failed()->id;) array_push($harvested, $resource->id);
+-    } catch (\Exception $e) {
+-      if($GLOBALS['ENV_DEBUG']) echo 'Caught exception: ', $e->getMessage(), "\n";
+-      $resource->update_hierarchy_entries_count();
+-      $resource->harvesting_failed();
+-      debug('Caught exception: ', $e->getMessage());
+-    }
++  //sleep the php until resuming the harvest from the rails side
++  while(Resource::is_paused() == 1) {
++          debug("Harvesting paused; sleeping");
++          sleep(40);
++        }
++  //get the resource and check with the previous one
++  $resource = Resource::get_ready_resource();
++
++  if (is_null($resource))
++    break;
++
++  if (!isset($previous_resource->id))
++    $previous_resource->id = -1;
++
++  if ($previous_resource->id == $resource->id){
++    $resource->harvesting_failed();
++    $previous_resource = $resource;
++    continue;
++  }else{
++    $previous_resource = $resource;
++  }
++
++  $GLOBALS['currently_harvesting_resource_id'] = $resource->id;
++
++  // See https://github.com/EOL/tramea/issues/186
++  // ids that are allowed:
++  // array(969, 958, 972, 973, 974, 21, 544, 323, 330, 327, 829, 826, 830, 831, 553, 833, 832, 556, 792, 798, 834, 744, 745, 200, 688, 699, 701, 899, 864, 799, 963, 984, 961, 872)
++  if(! in_array($resource->id, array(799))) {
++    debug("** Skipping $resource->id for now...");
++    $resource->harvesting_failed();
++    continue;
++  }
++
++  // IMPORTANT!
++  // We skip a few hard-coded resource IDs, here.
++  // TODO - it would be preferable if this flag were in the DB. ...It looks like using a ResourceStatus could achieve the effect.
++  // TODO - output a warning if a resource gets skipped.
++  if(in_array($resource->id, array(77, 710, 752))) {
++    debug("** SKIPPING hard-coded exception resource " . $resource->id);
++    debug("   (" . $resource->title . ")");
++    $resource->harvesting_failed();
++    continue;
++  }
++  // NOTE that a specified id will get SKIPPED if it's not "ready" for harvesting.
++  if($specified_id && $resource->id != $specified_id) {
++    debug("** SKIPPING non-specified resource " . $resource->id);
++    debug("   (" . $resource->title . ")");
++    $resource->harvesting_failed();
++    continue;
++  };
++  debug("++ START HARVEST " .  $resource->id . " (" . $resource->title . ")\n");
++
++  $validate = true;
++  if($GLOBALS['ENV_NAME'] == 'test') $validate = false;
++
++  try {
++    $resource->harvest($validate, false, $fast_for_testing);
++    array_push($harvested, $resource->id);
++  } catch (\Exception $e) {
++    $resource->update_hierarchy_entries_count();
++    $resource->harvesting_failed();
++    debug('Caught exception: ', $e->getMessage());
++  }
+ }
+ 
+ if($GLOBALS['ENV_DEBUG']) echo "Exiting harvest loop.\n";
+diff --git update_resources/connectors/750.php update_resources/connectors/750.php
+index 36ebf83..88db964 100755
+--- update_resources/connectors/750.php
++++ update_resources/connectors/750.php
+@@ -1,13 +1,6 @@
+ <?php
+ namespace php_active_record;
+-/* execution time: 9 seconds 
+-
+-                            Mar2014     11May2015
+-measurement_or_fact.tab]    [10618]     10312
+-occurrence.tab]             [3537]      3435
+-taxon.tab]                  [1176]      1141
+-
+-*/
++/* execution time: 9 seconds */
+ 
+ include_once(dirname(__FILE__) . "/../../config/environment.php");
+ require_library('connectors/FEISDataConnector');
+@@ -25,4 +18,4 @@ echo "\n elapsed time = " . $elapsed_time_sec . " seconds";
+ echo "\n elapsed time = " . $elapsed_time_sec/60 . " minutes";
+ echo "\n elapsed time = " . $elapsed_time_sec/60/60 . " hours";
+ echo "\n Done processing.\n";
+-?>
+\ No newline at end of file
++?>
+diff --git update_resources/connectors/inat.php update_resources/connectors/inat.php
+index 67fdcce..4e7d6c1 100755
+--- update_resources/connectors/inat.php
++++ update_resources/connectors/inat.php
+@@ -9,6 +9,28 @@ $timestart = time_elapsed();
+ require_library('connectors/INaturalistAPI');
+ $func = new INaturalistAPI();
+ $func->generate_link_backs();
++
++/* copy file to Dropbox */
++require_once "vendor/dropbox-sdk-php-1.1.5/lib/Dropbox/autoload.php";
++use \Dropbox as dbx;
++$accessToken = "0L_P2JHHe60AAAAAAAARGn8Au3W0IEmAHbWgHQzSfyP_QMvomhOkuHc-ATnbb23Z";
++$dbxClient = new dbx\Client($accessToken, "PHP-Example/1.0");
++/* $accountInfo = $dbxClient->getAccountInfo(); print_r($accountInfo); */
++$file = "iNat_EOL_object_urls.txt.zip";
++$dropbox_path = "/Public/iNaturalist/";
++$f = fopen(CONTENT_RESOURCE_LOCAL_PATH . $file, "rb");
++if($result = $dbxClient->getMetadata($dropbox_path.$file))
++{
++    print_r($result);
++    $dbxClient->delete($dropbox_path.$file);
++    echo "\nexisting file deleted\n";
++}
++else echo "\nfile does not exist yet\n";
++$result = $dbxClient->uploadFile($dropbox_path.$file, dbx\WriteMode::add(), $f);
++echo "\nfile uploaded\n";
++print_r($result);
++fclose($f);
++
+ $elapsed_time_sec = time_elapsed() - $timestart;
+ echo "\n\nelapsed time = " . $elapsed_time_sec/60 . " minutes \n";
+ echo "elapsed time = " . $elapsed_time_sec/60/60 . " hours \n";
+diff --git vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
+index fde329a..cac6459 100644
+--- vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
++++ vendor/PHPExcel/Classes/PHPExcel/Reader/Excel5.php
+@@ -410,7 +410,6 @@ class PHPExcel_Reader_Excel5 extends PHPExcel_Reader_Abstract implements PHPExce
+ 			$res = $ole->read($pFilename);
+ 			return true;
+ 		} catch (PHPExcel_Exception $e) {
+-			debug("PHPExcel_Exception");
+ 			return false;
+ 		}
+ 	}
+diff --git vendor/namelink/module.php vendor/namelink/module.php
+index 01f1b79..1ae8ecd 100644
+--- vendor/namelink/module.php
++++ vendor/namelink/module.php
 @@ -6,7 +6,7 @@ require_once(dirname(__FILE__) ."/NameTag.php");
  require_once(dirname(__FILE__) ."/NewNamesFinder.php");
  
